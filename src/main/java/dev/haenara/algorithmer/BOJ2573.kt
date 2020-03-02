@@ -15,66 +15,112 @@ fun main(args : Array<String>) {
 class BOJ2573 {
     var N : Int = 0
     var M : Int = 0
-    lateinit var map : Array<Array<Int>?>
-    var ices = setOf<Ice>()
+    lateinit var map : Array<Array<Int>>
+    val ices = arrayListOf<Ice>()
 
     fun main() {
         val firstLine = readLine()?.split(" ")
         N = firstLine!![0].toInt()
         M = firstLine!![1].toInt()
-        map = arrayOfNulls<Array<Int>?>(N)
+        val temp = arrayOfNulls<Array<Int>?>(N)
         repeat(N) {
-            map[it] = readLine()!!.split(" ").map { it.toInt() }.toTypedArray()
+            temp[it] = readLine()!!.split(" ").map { it.toInt() }.toTypedArray()
         }
-    }
-    fun solution(n : Int, k : Int, list : List<Int>) : Int {
-        var amount = k
-        var count = 0
-        var ices = arrayListOf<Ice>()
-        while(true) {
-            var x = 0
-            var y = 0
-            for (x in 0..N) {
-                for (y in 0..M) {
 
+        map = temp as Array<Array<Int>>
+
+        for (y in 0 until N) {
+            for (x in 0 until M) {
+                if (map[y][x] > 0) {
+                    ices.add(Ice(x, y, map[y][x]))
                 }
             }
-//            if (map[x][y] > 0) {
-//                ices.add(Ice(x,y, map[x][y]) )
-//            }
         }
 
-    }
-
-    data class Ice(val x : Int, val y : Int, var count : Int,
-              var left : Ice? = null,
-              var right : Ice? = null,
-              var up: Ice? = null,
-              var down : Ice? = null) {
-        fun melt() : Ice? {
-            if (left == null) { count-- }
-            if (right == null) { count-- }
-            if (up == null) { count-- }
-            if (down == null) { count-- }
-            return if (count > 0) {
-                this
+        printMap(map)
+        var count = 0
+        while (true) {
+            count++
+            ices.melt(map)
+            printMap(map)
+            var sum = 0
+            if (ices.size == 0) {
+                println("0")
+                return
             } else {
-                null
+                sum = paintAll(ices[0].x, ices[0].y, map.clone())
+            }
+            if (sum != ices.size) {
+                println(count)
+                return
             }
         }
-        fun find(target : Ice, except: Set<Ice> = setOf()) : Boolean{
-            return when (target) {
-                left -> true
-                right -> true
-                up -> true
-                down -> true
-                else -> {
-                    except.plus(this)
-                    (left?.let { if (!except.contains(it)) { it.find(target, except) } else { false }} ?: false) or
-                    (right?.let { if (!except.contains(it)) { it.find(target, except) } else { false }} ?: false) or
-                    (up?.let { if (!except.contains(it)) { it.find(target, except) } else { false }} ?: false) or
-                    (down?.let { if (!except.contains(it)) { it.find(target, except) } else { false }} ?: false)}
+
+    }
+
+    class Ice (val x : Int, val y : Int, var count : Int) {
+        fun melt(map : Array<Array<Int>>) : Boolean {
+            if (map[y-1][x] == 0) {
+                count--
             }
+            if (map[y][x-1] == 0) {
+                count--
+            }
+            if (map[y+1][x] == 0) {
+                count--
+            }
+            if (map[y][x+1] == 0) {
+                count--
+            }
+            if (count < 0) { count = 0 }
+            return (count == 0)
         }
     }
+
+    fun ArrayList<BOJ2573.Ice>.melt(map : Array<Array<Int>>) {
+        val toRemove = arrayListOf<Ice>()
+        forEach {
+            if (it.melt(map)) {
+                toRemove.add(it)
+            }
+        }
+        forEach {
+            map[it.y][it.x] = it.count
+        }
+        toRemove.forEach {
+            remove(it)
+        }
+    }
+
+    fun paintAll(x : Int, y : Int, map : Array<Array<Int>>, sum : Int = 0) : Int {
+        var toReturn = sum + 1
+        map[y][x] = -1
+        if (map[y-1][x] != 0 && map[y-1][x] != -1) {
+            toReturn += paintAll(x, y-1, map)
+        }
+        if (map[y][x-1] != 0 && map[y][x-1] != -1) {
+            toReturn += paintAll(x-1, y, map)
+        }
+        if (map[y+1][x] != 0 && map[y+1][x] != -1) {
+            toReturn += paintAll(x, y + 1, map)
+        }
+        if (map[y][x+1] != 0 && map[y][x+1] != -1) {
+            toReturn += paintAll(x+1, y, map)
+        }
+        return toReturn
+    }
+}
+
+
+fun printMap(map : Array<Array<Int>>) {
+//    map.forEach { row->
+//        row.forEach {
+//            if (it > 0) {
+//                print("${it} ")
+//            } else {
+//                print("_ ")
+//            }
+//        }
+//        println()
+//    }
 }
